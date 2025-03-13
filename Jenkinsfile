@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     environment {
         DOCKER_HUB_CREDS = credentials('docker-hub-credentials')
         DOCKER_USERNAME = 'student9393'
@@ -8,20 +7,17 @@ pipeline {
         BACKEND_IMAGE_NAME = "${DOCKER_USERNAME}/backend-image"
         KUBECONFIG = credentials('kubeconfig-credentials')
     }
-
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-
         stage('Login to Docker Hub') {
             steps {
                 sh 'echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin'
             }
         }
-
         stage('Build and Push Frontend Image') {
             steps {
                 dir('learnerReportCS_frontend') {
@@ -33,7 +29,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build and Push Backend Image') {
             steps {
                 dir('learnerReportCS_backend') {
@@ -45,7 +40,6 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy to Kubernetes using Helm') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
@@ -61,7 +55,6 @@ pipeline {
                         else
                             helm install learnerreport ./learnerreport
                         fi
-
                         # Verify deployment
                         kubectl get pods
                         kubectl get services
@@ -69,7 +62,6 @@ pipeline {
                 }
             }
         }
-
         stage('Run Tests') {
             steps {
                 echo 'Running tests...'
@@ -91,14 +83,15 @@ pipeline {
             }
         }
     }
-
     post {
         always {
-            sh '''
-                docker logout
-                docker system prune -f
-            '''
-            cleanWs()
+            node {  // Adding node block to provide FilePath context
+                sh '''
+                    docker logout
+                    docker system prune -f
+                '''
+                cleanWs()
+            }
         }
         success {
             echo '✅ Pipeline completed successfully!'
