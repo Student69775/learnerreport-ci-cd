@@ -82,10 +82,8 @@ pipeline {
                 '''
             }
         }
-    }
-    post {
-        always {
-            node {  // Adding node block to provide FilePath context
+        stage('Cleanup') {
+            steps {
                 sh '''
                     docker logout
                     docker system prune -f
@@ -93,6 +91,8 @@ pipeline {
                 cleanWs()
             }
         }
+    }
+    post {
         success {
             echo '✅ Pipeline completed successfully!'
         }
