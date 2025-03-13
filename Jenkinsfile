@@ -15,15 +15,18 @@ pipeline {
         }
         stage('Login to Docker Hub') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                    } else {
-                        bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    script {
+                        if (isUnix()) {
+                            sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        } else {
+                            bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
+                        }
                     }
                 }
             }
         }
+
 
         stage('Build and Push Frontend Image') {
             steps {
