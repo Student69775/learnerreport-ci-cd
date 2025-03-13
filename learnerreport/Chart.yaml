@@ -1,0 +1,15 @@
+apiVersion: v2
+name: learnerreport
+description: A Helm chart for MERN-based Learner Report Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - mern
+  - mongodb
+  - express
+  - react
+  - nodejs
+maintainers:
+  - name: Student9393
+    email: student9393@example.com

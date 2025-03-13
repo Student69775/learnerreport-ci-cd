@@ -1,0 +1,48 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your application has been deployed with the following components:
+
+1. Frontend (React.js):
+   {{- if contains "NodePort" .Values.frontend.service.type }}
+   Get the application URL by running these commands:
+     export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-frontend-service)
+     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+     echo http://$NODE_IP:$NODE_PORT
+   {{- else if contains "LoadBalancer" .Values.frontend.service.type }}
+   Get the application URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ .Release.Name }}-frontend-service'
+     export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ .Release.Name }}-frontend-service --template "{{ "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}" }}")
+     echo http://$SERVICE_IP:{{ .Values.frontend.service.port }}
+   {{- else if contains "ClusterIP" .Values.frontend.service.type }}
+   Access the frontend service by running these commands:
+     kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ .Release.Name }}-frontend-service {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.port }}
+     Then visit http://localhost:{{ .Values.frontend.service.port }}
+   {{- end }}
+
+2. Backend (Express.js/Node.js):
+   {{- if contains "NodePort" .Values.backend.service.type }}
+   Get the API URL by running these commands:
+     export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-backend-service)
+     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+     echo http://$NODE_IP:$NODE_PORT
+   {{- else if contains "LoadBalancer" .Values.backend.service.type }}
+   Get the API URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ .Release.Name }}-backend-service'
+     export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ .Release.Name }}-backend-service --template "{{ "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}" }}")
+     echo http://$SERVICE_IP:{{ .Values.backend.service.port }}
+   {{- else if contains "ClusterIP" .Values.backend.service.type }}
+   Access the backend API by running these commands:
+     kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ .Release.Name }}-backend-service {{ .Values.backend.service.port }}:{{ .Values.backend.service.port }}
+     Then visit http://localhost:{{ .Values.backend.service.port }}
+   {{- end }}
+{{- if .Values.ingress.enabled }}
+3. Ingress:
+  Your application is also available at:
+  {{- range .Values.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $.host }}{{ .path }}
+  {{- end }}
+  {{- end }}
+{{- end }}

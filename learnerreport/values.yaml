@@ -1,0 +1,108 @@
+# Default values for learnerreport.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+
+image:
+  repository: student9393/learnerreport
+  tag: latest
+  pullPolicy: IfNotPresent
+
+
+global:
+  environment: development
+
+# Service configuration for backward compatibility
+service:
+  port: 80
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: student9393/frontend-image
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 3000
+    targetPort: 3000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    - name: REACT_APP_API_BASE_URL
+      value: "http://backend-service:5000"
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: student9393/backend-image
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5000
+    targetPort: 5000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    - name: ATLAS_URI
+      value: "mongodb+srv://sxyz9393:F9xJs07ILIJJI5HY@cluster0.355eynj.mongodb.net/blog_mern?retryWrites=true&w=majority"
+    - name: HASH_KEY
+      value: "thisIsMyHashKey"
+    - name: JWT_SECRET_KEY
+      value: "thisIsMyJwtSecretKey"
+
+# Ingress configuration for external access
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: learnerreport.local   # ✅ This is correct
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+          port: 3000
+        - path: /api
+          pathType: Prefix
+          service: backend
+          port: 5000
+
+
+# Service account configuration
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: "learnerreport-sa"  # Add this value
+
+# Common settings
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+autoscaling:
+  enabled: false  # Change to true if using HPA
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
