@@ -3,19 +3,16 @@
 # Declare variables to be passed into your templates.
 
 # Global settings
-
+replicaCount: 1
 image:
-  repository: student9393/learnerreport
+  repository: nginx
   tag: latest
   pullPolicy: IfNotPresent
 
+nameOverride: ""
+fullnameOverride: ""
 
-global:
-  environment: development
-
-# Service configuration for backward compatibility
-service:
-  port: 80
+imagePullSecrets: []
 
 # Frontend configuration
 frontend:
@@ -38,7 +35,7 @@ frontend:
       memory: 256Mi
   env:
     - name: REACT_APP_API_BASE_URL
-      value: "http://backend-service:5000"
+      value: "http://learnerreport-backend-service:5000"
 
 # Backend configuration
 backend:
@@ -67,14 +64,19 @@ backend:
     - name: JWT_SECRET_KEY
       value: "thisIsMyJwtSecretKey"
 
-# Ingress configuration for external access
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Ingress configuration
 ingress:
   enabled: true
   className: "nginx"
   annotations:
     kubernetes.io/ingress.class: nginx
   hosts:
-    - host: learnerreport.local   # ✅ This is correct
+    - host: learnerreport.local
       paths:
         - path: /
           pathType: Prefix
@@ -84,24 +86,34 @@ ingress:
           pathType: Prefix
           service: backend
           port: 5000
+  tls: []
 
+# Resource settings
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
 
-# Service account configuration
+# ServiceAccount configuration
 serviceAccount:
   create: true
   automount: true
   annotations: {}
-  name: "learnerreport-sa"  # Add this value
+  name: "learnerreport-sa"
 
-# Common settings
+# Pod settings
 podAnnotations: {}
 podLabels: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
 
+# Autoscaling configuration
 autoscaling:
-  enabled: false  # Change to true if using HPA
+  enabled: false
   minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 80
