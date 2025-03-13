@@ -15,9 +15,16 @@ pipeline {
         }
         stage('Login to Docker Hub') {
             steps {
-                sh 'echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin'
+                script {
+                    if (isUnix()) {
+                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    } else {
+                        bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
+                    }
+                }
             }
         }
+
         stage('Build and Push Frontend Image') {
             steps {
                 dir('learnerReportCS_frontend') {
